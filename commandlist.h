@@ -5,7 +5,8 @@
 enum Command {
 	RELEASE 1,
 	RESET 2,
-	BEEP 4,
+	BEEP_START 4,
+        BEEP_STOP
   TAKE_PHOTO 8,
   SAVE_PRESSURE 16
 };
@@ -23,7 +24,7 @@ public:
 	void Execute(Command);
 	bool AllCommandsSet() const;
 	void AddCommand(Command, Action<void>);
-  void ExecuteCommands(unsigned short int);
+        void ExecuteCommands(const unsigned short int);
 };
 
 Command GetCommandByID(short int);

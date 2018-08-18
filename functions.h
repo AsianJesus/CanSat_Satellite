@@ -1,5 +1,6 @@
 #ifndef __FUNCTIONS__
 #include "commandlist.h"
+
 int GetIDFromEEPROM();
 float GetPressureFromEEPROM();
 bool GetReleasedStateFromEEPROM();
@@ -9,12 +10,12 @@ void SaveIDInEEPROM(const int id);
 void SaveReleasedStateInEEPROM(const bool rState);
 
 
-bool TryGetCommand(String& command);
-bool CheckCommand(const String& command, int& commandCode);
-bool ExecuteCommand(CommandList& commands,const int commandCode);
+bool TryGetCommand(String& command, unsigned short int& flag);
+bool CheckCommand(const String& command, unsigned short int& commandCode);
+bool ExecuteCommand(CommandList& commands,const unsigned short int commandCode);
 void RequestCommand();
-short int CheckAutoCommands(const float& height, const bool released);
-void Report(const int commandCode, const bool executionStatus);
+unsigned short int CheckAutoCommands(const float& height, const bool released);
+void Report(const unsigned short int commandCode, const bool executionStatus);
 
 #endif
 
