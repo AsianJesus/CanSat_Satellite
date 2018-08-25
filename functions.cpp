@@ -24,6 +24,10 @@ bool TryGetCommand(String& command, unsigned short int& flag){
      return false;
     }
 }
+bool CheckCommand(const String& command, unsigned short int& commandCode){
+  int sep = command.indexOf(",");
+  return (sep == -1) ? false : (command.substring(sep) == CalculateHash(command.substring(0,sep)));
+}
 unsigned short int CheckAutoCommands(const float& height, const bool released){
   unsigned short int flag = 0;  
   if(height > RELEASE_HEIGHT && !released){

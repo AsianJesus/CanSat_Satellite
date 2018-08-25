@@ -16,6 +16,7 @@ bool ExecuteCommand(CommandList& commands,const unsigned short int commandCode);
 void RequestCommand();
 unsigned short int CheckAutoCommands(const float& height, const bool released);
 void Report(const unsigned short int commandCode, const bool executionStatus);
+String& CalculateHash(const String& msg);
 
 #endif
 
