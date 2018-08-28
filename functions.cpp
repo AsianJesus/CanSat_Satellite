@@ -8,29 +8,20 @@
 #include "sensors.h"
 #include "commandlist.h"
 
-#define RELEASE_HEIGHT 400
-#define BUZZER_HEIGHT 10
-#define EEPROM_ADDRESS_P0 0x10
-#define EEPROM_ADDRESS_PID 0x20
-#define EEPROM_ADDRESS_RSTATE 0x30
-
-bool ExecuteCommand(CommandList& commands,const unsigned short int commandCode){
-  bool result = false; 
-  try{
-     commands.ExecuteCommands(commandCode);
-     result = true;
-   }catch(...){
-      result = false;
-   } 
-   SendReport(commandCode, result);
+void ExecuteCommand(CommandList& commands,const unsigned short int commandCode){
+  commands.ExecuteCommands(commandCode);
+  SendReport(commandCode);
 }
-bool TryGetCommand(String& command, unsigned short int& flag){
+bool TryGetCommand(unsigned short int& flag){
     unsigned short int flag;
-    if(CheckCommand(commands,command, flag)){
+    String* command = XBeeRead();
+    if(CheckCommand(commands,*command, flag)){
+      free(command);
       return true;
     }
     else{
-     RequestCommand(); 
+     RequestCommand();
+     free(command); 
      return false;
     }
 }

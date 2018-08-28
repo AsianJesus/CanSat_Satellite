@@ -11,8 +11,7 @@ enum MSG_TYPES {
 	COMMAND_REQUEST	0xDF
 };
 	// Define pins
-  //#define 
-	void DefinePinmodes();
+
 	void InitializeSensors();
 
   //The list is not complete

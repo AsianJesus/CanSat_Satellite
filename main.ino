@@ -41,14 +41,14 @@ void loop() {
       ExecuteCommand(commands,commandCode);
   }
   GetInfoFromSensors(temp,pressure,humidity,height);
-  if(short int code = CheckAutoCommands(height,released)){
-      ExecuteCommand(commandList,code);
+  if(unsigned short int code = CheckAutoCommands(height,released)){
+      ExecuteCommand(commands,code);
   }
   telemetryString = BuildTelemetryMessage(temp,pressure,humidity,height);
   if(telemetryString)
     SendTelemetry(*telemetryString);
   id++;
   SaveIDInEEPROM(id);
-  delete telemetryString;
+  free(telemetryString);
 }
 
