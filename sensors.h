@@ -1,5 +1,10 @@
 #ifndef __SENSORS__
 
+#define PIN_SERVO 2
+#define PIN_DHT 1
+
+#define DHT_TYPE 11
+
 enum MSG_TYPES {
 	TELEMETRY 0xFF,
 	COMMAND_RESPONSE 0xEF,
@@ -12,8 +17,8 @@ enum MSG_TYPES {
 
   //The list is not complete
 	bool GetTemperatureAndHumidity(float& temp, float& humidity);
-	bool GetPressureAndHeight(const float& p0, float& pressure, float& height);
-  
+	bool GetPressureAndHeight(const float& p0, const float& temp, float& pressure, float& height);
+  	
   
 	void TurnServo(const float degree);
 	void SetBuzzerState(const bool state);

@@ -6,7 +6,6 @@ float temp, pressure, p0, humidity,height;
 int id;
 int commandCode;
 bool released = false;
-String commandString;
 String* telemetryString;
 
 void TakePhoto();
@@ -38,7 +37,7 @@ void setup() {
 void loop() {
   // put your main code here, to run repeatedly:
   id = GetIDFromEEPROM();
-  if(TryGetCommand(commandString,commandCode)){
+  if(TryGetCommand(commandCode)){
       ExecuteCommand(commands,commandCode);
   }
   GetInfoFromSensors(temp,pressure,humidity,height);

@@ -9,7 +9,7 @@ void SavePressureInEEPROM(const float p0);
 void SaveIDInEEPROM(const unsigned int id);
 void SaveReleasedStateInEEPROM(const bool rState);
 
-bool TryGetCommand(String& command, unsigned short int& flag);
+bool TryGetCommand(unsigned short int& flag);
 bool CheckCommand(const String& command, unsigned short int& commandCode);
 bool ExecuteCommand(CommandList& commands,const unsigned short int commandCode);
 void RequestCommand();

@@ -34,7 +34,7 @@ bool TryGetCommand(String& command, unsigned short int& flag){
      return false;
     }
 }
-bool CheckCommand(const String& command, unsigned short int& commandCode){
+bool CheckCommand(const String& command, unsigned short int& commandCode){z`
   int sep = command.indexOf("|");
   if(sep == -1) return false;
   String strCode = command.substring(0,sep);

@@ -6,9 +6,9 @@ enum Command {
 	RELEASE 1,
 	RESET 2,
 	BEEP_START 4,
-    BEEP_STOP
-  	TAKE_PHOTO 8,
-  	SAVE_PRESSURE 16
+    BEEP_STOP 8,
+  	TAKE_PHOTO 16,
+  	SAVE_PRESSURE 32
 };
 
 class CommandList
