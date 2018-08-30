@@ -10,39 +10,38 @@
 
 void ExecuteCommand(CommandList& commands,const unsigned short int commandCode){
   commands.ExecuteCommands(commandCode);
-  SendReport(commandCode);
+  Report(commandCode);
 }
 bool TryGetCommand(unsigned short int& flag){
-    unsigned short int flag;
-    String* command = XBeeRead();
-    if(CheckCommand(commands,*command, flag)){
-      free(command);
+    String command = XBeeRead();
+    if(command == "") return false;
+    if(CheckCommand(command, flag)){
+      Serial.println("We did it");
       return true;
     }
     else{
+     Serial.println(command);
+     Serial.println("Some error");
      RequestCommand();
-     free(command); 
      return false;
     }
 }
-bool CheckCommand(const String& command, unsigned short int& commandCode){z`
+bool CheckCommand(const String& command, unsigned short int& commandCode){
   int sep = command.indexOf("|");
   if(sep == -1) return false;
   String strCode = command.substring(0,sep);
-  String* hash = CalculateHash(strCode);
-  if (*hash != command.substring(sep)) {
-	  free(hash);
-	  return false;
-  }
-  try{
-    commandCode = (unsigned short int) strCode.toInt();
-  }
-  catch(...){
-	free(hash);
-    return false;
-  }
-  free(hash);
-  return true;
+  //CheckHash(strCode,command.substring(sep+1));
+  /*
+  if (hash != command.substring(sep+1)) {
+     Serial.println("Hash is wrong");
+     Serial.println(hash);
+     Serial.println(command.substring(sep+1));
+     Serial.println(sep);
+     Serial.println(command);
+	   return false;
+  }*/
+  commandCode = (unsigned short int) strCode.toInt();
+  return commandCode == 0 ? false : true;
 }
 unsigned short int CheckAutoCommands(const float& height, const bool released){
   unsigned short int flag = 0;  
@@ -52,25 +51,23 @@ unsigned short int CheckAutoCommands(const float& height, const bool released){
   if(height < BUZZER_HEIGHT){
      flag |= Command::BEEP_START; 
   }
-  else{
-    flag |= Command::BEEP_END;
-  }
-  return flag;
 }
 
 unsigned int GetIDFromEEPROM(){
-  byte buffer[] = new buffer[sizeof(unsigned int)];
+  byte* buf = new byte[sizeof(unsigned int)];
   for(short i = 0; i < sizeof(unsigned int); i++){
-    EEPROM.get(EEPROM_ADDRESS_PID+i,buffer[i]);
+    EEPROM.get(EEPROM_ADDRESS_PID+i,buf[i]);
   }
-  return *(unsigned int*)(void*)&buffer;
+  unsigned int result = *(unsigned int*)(void*)buf;
+  delete buf;
+  return result;
 }
 float GetPressureFromEEPROM(){
-  byte buffer[] = new buffer[sizeof(float)];
+  byte* buf = new byte[sizeof(float)];
   for(short i = 0; i < sizeof(unsigned int); i++){
-    EEPROM.get(EEPROM_ADDRESS_P0+i,buffer[i]);
+    EEPROM.get(EEPROM_ADDRESS_P0+i,buf[i]);
   }
-  return *(float)(void*)&buffer;
+  return *(float*)(void*)&buf;
 }
 bool GetReleasedStateFromEEPROM(){
   bool rState = false;
@@ -93,9 +90,19 @@ void SaveReleasedStateInEEPROM(const bool rState){
 }
 
 
-String* CalculateHash(const String& msg){
+bool CheckHash(const String& msg,const String& hash){
 #ifndef __OPTIMIZED__
-  String* result = new String(MD5::make_digest(MD5::make_hash(msg.c_str()),16));
+  char* h1 = MD5::make_digest(MD5::make_hash(msg.c_str()),16);
+  const char* h2 = hash.c_str();
+  bool result = true;
+  if(strlen(h1) != strlen(h2)) result = false;
+  for(int i = 0; i < strlen(h1) && result; i++){
+    if(*h1 != *h2) result = false;
+    h1++;
+    h2++;
+  }
+  delete h1;
+  delete h2;
   return result;
 #endif
 }
@@ -103,6 +110,6 @@ String* CalculateHash(const String& msg){
 void RequestCommand(){
   XBeeSend(MSG_TYPES::COMMAND_REQUEST);
 }
-void Report(const unsigned short int commandCode, const bool executionStatus){
-  XBeeSend(MSG_TYPES::COMMAND_RESPONSE,String(commandCode) + "," + String(executionStatus));
+void Report(const unsigned short int commandCode){
+  XBeeSend(MSG_TYPES::COMMAND_RESPONSE,String(commandCode));
 }

@@ -1,4 +1,3 @@
-#include "stdafx.h"
 #include "commandlist.h"
 
 bool CommandList::commandSet(Command c) const
@@ -11,7 +10,7 @@ CommandList::CommandList() : list()
 
 }
 
-CommandList::CommandList(Dictionary<Command, Action<void>> dict) : list(dict)
+CommandList::CommandList(Dictionary dict) : list(dict)
 {
 }
 
@@ -33,7 +32,7 @@ void CommandList::Execute(Command c)
 
 bool CommandList::AllCommandsSet() const
 {
-	return commandSet(Command::RELEASE) && commandSet(Command::RESET) && commandSet(Command::BEEP);
+	return commandSet(Command::RELEASE) && commandSet(Command::RESET) && commandSet(Command::BEEP_START) && commandSet(Command::BEEP_STOP) && commandSet(Command::TAKE_PHOTO) && commandSet(Command::SAVE_PRESSURE);
 }
 
 void CommandList::AddCommand(Command c, Action<void> act)
@@ -43,17 +42,19 @@ void CommandList::AddCommand(Command c, Action<void> act)
 
 void CommandList::ExecuteCommands(unsigned short int flag){
    if(flag == 0) return;
-   if(Command::RELEASE & flag) list[Command::RELEASE]();
-   if(Command::RESET & flag) list[Command::RESET]();
-   if(Command::BEEP & flag) list[Command::BEEP]();
-   if(Command::TAKE_PHOTO & flag) list[Command::TAKE_PHOTO]();
-   if(Command::SAVE_PRESSURE & flag) list[Command::SAVE_PRESSURE]();
+   if(Command::RELEASE & flag) ((Action<void>)list[Command::RELEASE])();
+   if(Command::RESET & flag) ((Action<void>)list[Command::RESET])();
+   if(Command::BEEP_START & flag) ((Action<void>)list[Command::BEEP_START])();
+   if(Command::BEEP_STOP & flag) ((Action<void>)list[Command::BEEP_STOP])();
+   if(Command::TAKE_PHOTO & flag) ((Action<void>)list[Command::TAKE_PHOTO])();
+   if(Command::SAVE_PRESSURE & flag) ((Action<void>)list[Command::SAVE_PRESSURE])();
 }
 
 Command GetCommandByID(short int id){
    if(Command::RELEASE & id) return Command::RELEASE;
    if(Command::RESET & id) return Command::RESET;
-   if(Command::BEEP & id) return Command::BEEP;
+   if(Command::BEEP_START & id) return Command::BEEP_START;
+   if(Command::BEEP_STOP & id) return Command::BEEP_STOP;
    if(Command::TAKE_PHOTO & id) return Command::TAKE_PHOTO;
    if(Command::SAVE_PRESSURE & id) return Command::SAVE_PRESSURE;
   

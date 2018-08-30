@@ -21,7 +21,7 @@ void ExecuteCommand(CommandList& commands,const unsigned short int commandCode);
 void RequestCommand();
 unsigned short int CheckAutoCommands(const float& height, const bool released);
 void Report(const unsigned short int commandCode);
-String* CalculateHash(const String& msg);
+bool CheckHash(const String& msg,const String& hash);
 
 #endif
 
