@@ -50,9 +50,11 @@ int timeout = 1000;
 void loop() {
   //Incremental code
   id = GetIDFromEEPROM();
+  xb.listen();
   if(TryGetCommand(commandCode)){
       ExecuteCommand(commands,commandCode);
   }
+  gS.listen();
   GetInfoFromSensors(temp,humidity,pressure,height,flightTime,voltage,speed,gpsData);
   if(unsigned short int code = CheckAutoCommands(height,released)){
       ExecuteCommand(commands,code);

@@ -103,7 +103,6 @@ void TurnServo(const float degree){
 }
 bool GetTemperatureAndHumidity(double& temp, double& humidity){
   double t = dht.readTemperature();
-  Serial.println(dht.readTemperature());
   if(isnan(t)) return false;
   temp = t;
   humidity = dht.readHumidity();
