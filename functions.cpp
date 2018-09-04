@@ -113,3 +113,25 @@ void RequestCommand(){
 void Report(const unsigned short int commandCode){
   XBeeSend(MSG_TYPES::COMMAND_RESPONSE,String(commandCode));
 }
+long GetTimeFromEEPROM() {
+  byte buf = 0;
+  long result = 0;
+  EEPROM.get(EEPROM_ADDRESS_RTC, buf);
+  result += buf*3600;
+  EEPROM.get(EEPROM_ADDRESS_RTC + 1, buf);
+  result += buf*60;
+  EEPROM.get(EEPROM_ADDRESS_RTC + 2, buf);
+  result += buf;
+
+  return result;
+}
+
+void SaveTimeInEEPROM(const long time) {
+  long temp = time;
+  EEPROM.write(EEPROM_ADDRESS_RTC + 2, (byte)(temp%60));
+  temp /= 60;
+  EEPROM.write(EEPROM_ADDRESS_RTC + 1, (byte)(temp%60));
+  temp /= 60;
+  EEPROM.write(EEPROM_ADDRESS_RTC, (byte)(temp));
+}
+

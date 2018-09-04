@@ -6,10 +6,13 @@
 #define EEPROM_ADDRESS_P0 0x10
 #define EEPROM_ADDRESS_PID 0x20
 #define EEPROM_ADDRESS_RSTATE 0x30
+#define EEPROM_ADDRESS_RTC 0x40
 
 unsigned int GetIDFromEEPROM();
 float GetPressureFromEEPROM();
 bool GetReleasedStateFromEEPROM();
+long GetTimeFromEEPROM();
+void SaveTimeInEEPROM(const long time);
 
 void SavePressureInEEPROM(const float p0);
 void SaveIDInEEPROM(const unsigned int id);

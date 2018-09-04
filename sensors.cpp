@@ -1,21 +1,24 @@
 #include "sensors.h"
-
+#include <RTClib.h>
 #include <SFE_BMP180.h>
 #include <Servo.h>
 #include <DHT.h>
 #include <SoftwareSerial.h>
 #include <TinyGPS.h>
-
+#include <Wire.h>
 Servo servo;
 DHT dht(PIN_DHT,DHT_TYPE);
 SoftwareSerial* gpsSerial;
 SoftwareSerial* xbee;
 TinyGPS gps;
 SFE_BMP180 bmp;
-
+RTC_DS1307 RTC;
+float offset = 0;
 void InitializeSensors(SoftwareSerial& xb,SoftwareSerial& gS){
-  //servo.attach(PIN_SERVO);
+  servo.attach(PIN_SERVO);
   dht.begin();
+  Wire.begin();
+  RTC.begin();
   xbee = &xb;
   xbee->begin(9600);
   xbee->setTimeout(100);
@@ -23,7 +26,19 @@ void InitializeSensors(SoftwareSerial& xb,SoftwareSerial& gS){
   gpsSerial->begin(9600);
   delay(1000);
   bmp.begin();
-  // ...
+  if (! RTC.isrunning()) {
+    Serial.println("RTC is NOT running!");
+ RTC.adjust(DateTime(__DATE__, __TIME__));
+  }
+  int sensorValue = 0;
+  int sum = 0;
+   for(int i=0;i<10;i++)
+    {
+         sensorValue = analogRead(PIN_PITOTTUBE)-512;
+         sum+=sensorValue;
+    }
+    offset=sum/10.0;
+    // ...
 }
 
 void SetBuzzerState(bool verify){
@@ -52,7 +67,7 @@ bool GetGPSCoordinates(String& gpsData){
   bool newdata = false;
   unsigned long start = millis();
   // Every 5 seconds we print an update
-  while (millis() - start < 250) 
+  while (millis() - start < 500) 
   {
     if (gpsSerial->available())  
     {
@@ -74,7 +89,7 @@ bool GetGPSCoordinates(String& gpsData){
   gps.f_get_position(&lat, &lon, &age);
   unsigned long date, time;
   gps.get_datetime(&date,&time,&age);
-  gpsData = String(lat) + "," + String(lon) + "," + String(gps.altitude()) + "," + String(date) + ","+String(time);
+  gpsData = String(lat) + "," + String(lon) + "," + String(gps.satellites()) + "," + String(date) + ","+String(time);
   return true;
 }
 bool GetPressureAndHeight(const double& p0, double& temp, double& pressure, double& height){
@@ -116,13 +131,14 @@ void XBeeSend(MSG_TYPES type){
 }
 String XBeeRead(){
   xbee->listen();
-  return xbee->readStringUntil('\n');
+  String res = xbee->readStringUntil('\n');
+  return res;
 }
 bool GetSpeed(float& sp){
-  static float s0 = 0;
-  float x = analogRead(PIN_PITOTTUBE);
-  float s = sqrt((2*x)/1.225);
-  return (s-s0);
+  int sensorValue = analogRead(PIN_PITOTTUBE)-offset; 
+  float P =(5*sensorValue)/1024.0 - 2.5;
+  sp = sqrt((2*abs(P))/1.225);
+  return true;
 }
 bool GetVoltage(float&){
   return 2* map(analogRead(PIN_VOLTAGE_DIVIDER),0,1024,0,2.5);
@@ -132,4 +148,10 @@ void SavePhoto(){
   delay(100);
   digitalWrite(PIN_CAMERA,LOW);
 }
+
+bool GetFlightTime(long& time) {
+  DateTime DT = RTC.now();
+  time = DT.hour()*3600 + DT.minute()*60 + DT.second();
+  return true;
+  }
 
