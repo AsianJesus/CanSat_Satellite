@@ -1,4 +1,3 @@
-#include <RTClib.h>
 //#include <MemoryFree.h>
 #include "functions.h"
 #include "sensors.h"
@@ -53,7 +52,6 @@ int timeout = 1000;
 void loop() {
   Release();
   //Incremental code
-  id = GetIDFromEEPROM();
   if(TryGetCommand(commandCode)){
       ExecuteCommand(commands,commandCode);
   }
