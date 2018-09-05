@@ -1,12 +1,11 @@
-//#include <MemoryFree.h>
 #include "functions.h"
 #include "sensors.h"
 #include <SoftwareSerial.h>
-//#include <TinyGPS.h>
+#include <TimerOne.h>
 CommandList commands;
 double temp, pressure, p0, humidity,height;
 float speed,voltage;
-String gpsData;
+String gpsData, miscData;
 int id;
 unsigned short int commandCode;
 bool released = false;
@@ -21,22 +20,28 @@ void GetAndSavePressure();
 void Reset();
 
 //Arguments are not finished
-void GetInfoFromSensors(double& t, double& hum,double& pres, double& altit,long& fTime,float& volt,float& sp,String& gps);
+void GetInfoFromSensors(double& t, double& hum,double& pres, double& altit,long& fTime,float& volt,float& sp,String& gps,String& misc);
 //Arguments are not finished
-String BuildTelemetryMessage(double t, double hum,double pres, double altit,long fTime,float volt,float sp, String& gps);
+String BuildTelemetryMessage(double t, double hum,double pres, double altit,long fTime,float volt,float sp, String& gps, String& misc);
 void SendTelemetry(const String& message);
+
+void StartSendingTelemetry();
+void StopSendingTelemetry();
+
 SoftwareSerial xb(5,4);
 SoftwareSerial gS(7,8);
 void setup() {
   // put your setup code here, to run once:
   Serial.begin(9600);
+  InitializeSensors(xb,gS);
+  GiveSoundCommand(100,3);
   commands.AddCommand(Command::RELEASE,Release);
   commands.AddCommand(Command::RESET, Reset);
   commands.AddCommand(Command::BEEP_START,TurnOnBuzzer);
   commands.AddCommand(Command::BEEP_STOP,TurnOffBuzzer);
   commands.AddCommand(Command::TAKE_PHOTO,TakePhoto);
   commands.AddCommand(Command::SAVE_PRESSURE, GetAndSavePressure);
-  InitializeSensors(xb,gS);
+  GiveSoundCommand(125,3);
   p0 = GetPressureFromEEPROM();
   p0 = 101000;
   id = GetIDFromEEPROM();
@@ -45,8 +50,7 @@ void setup() {
  // Serial.println(p0);
   gS.begin(9600);
   xb.begin(9600);
-
-  
+  GiveSoundCommand(150,3);
 }
 int timeout = 1000;
 void loop() {
@@ -55,16 +59,14 @@ void loop() {
   if(TryGetCommand(commandCode)){
       ExecuteCommand(commands,commandCode);
   }
-  GetInfoFromSensors(temp,humidity,pressure,height,flightTime,voltage,speed,gpsData);
+  GetInfoFromSensors(temp,humidity,pressure,height,flightTime,voltage,speed,gpsData,miscData);
   if(unsigned short int code = CheckAutoCommands(height,released)){
       ExecuteCommand(commands,code);
   }
-  telemetryString = BuildTelemetryMessage(temp,humidity,pressure,height,flightTime,voltage,speed,gpsData);
-  if(telemetryString)
-    SendTelemetry(telemetryString);
+  telemetryString = BuildTelemetryMessage(temp,humidity,pressure,height,flightTime,voltage,speed,gpsData,miscData);
   id++;
   SaveIDInEEPROM(id);
-  delay(500);/*
+  /*
   TurnServo(100);
   delay(500);
   TurnServo(-100);
@@ -87,18 +89,18 @@ void TakePhoto(){
   SavePhoto();
 }
 void TurnOnBuzzer(){
-  SetBuzzerState(true);
+  SetBuzzerState(true,BUZZER_COOLDOWN);
 }
 void TurnOffBuzzer(){
-  SetBuzzerState(false);  
+  SetBuzzerState(false,BUZZER_COOLDOWN);  
 }
 void Release(){
-  TurnServo(20);
+  StopSendingTelemetry();
+  TurnServo(90,false);
   delay(1000);
-  TurnServo(-20);
-  delay(1000);
-  TurnServo(90);
-  }
+  TurnServo(0,true);
+  StartSendingTelemetry();
+}
 void GetAndSavePressure(){
   double p,h;
   GetPressureAndHeight(p0,temp,p,h);
@@ -113,10 +115,18 @@ void Reset(){
   SaveTimeInEEPROM(startTimePoint);
 }
 
-void SendTelemetry(const String& msg){
-  XBeeSend(MSG_TYPES::TELEMETRY,msg);
+void StartSendingTelemetry(){
+  Timer1.initialize(1000000);
+  Timer1.attachInterrupt(SendTelemetry);
 }
-String BuildTelemetryMessage(double t, double hum,double pres, double altit,long fTime,float volt, float sp, String& gps){
+void StopSendingTelemetry(){
+  Timer1.detachInterrupt();
+}
+void SendTelemetry(){
+  Serial.println(telemetryString);
+  //XBeeSend(MSG_TYPES::TELEMETRY,telemetryString);
+}
+String BuildTelemetryMessage(double t, double hum,double pres, double altit,long fTime,float volt, float sp, String& gps,String& miscData){
   String telemetry;
   telemetry.concat(String(id));
   telemetry.concat(",");
@@ -135,9 +145,11 @@ String BuildTelemetryMessage(double t, double hum,double pres, double altit,long
   telemetry.concat(String(volt));
   telemetry.concat(",");
   telemetry.concat(gps);
+  telemetry.concat(",");
+  telemetry.concat(miscData);
   return telemetry;
 }
-void GetInfoFromSensors(double& t, double& hum,double& pressure, double& altit,long& fTime,float& volt,float& sp,String& gpsData){
+void GetInfoFromSensors(double& t, double& hum,double& pressure, double& altit,long& fTime,float& volt,float& sp,String& gpsData,String& misc){
   
   if(!GetTemperatureAndHumidity(t,hum)){
     t = 0;
@@ -148,6 +160,6 @@ void GetInfoFromSensors(double& t, double& hum,double& pressure, double& altit,l
   //GetVoltage(volt);
   GetGPSCoordinates(gpsData);
   GetSpeed(sp); 
-  
+  GetMISCData(misc);
 }
 

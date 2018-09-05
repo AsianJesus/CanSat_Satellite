@@ -15,7 +15,7 @@ SFE_BMP180 bmp;
 RTC_DS1307 RTC;
 float offset = 0;
 void InitializeSensors(SoftwareSerial& xb,SoftwareSerial& gS){
-  servo.attach(PIN_SERVO);
+  pinMode(PIN_BUZZER,OUTPUT);
   dht.begin();
   Wire.begin();
   RTC.begin();
@@ -38,13 +38,30 @@ void InitializeSensors(SoftwareSerial& xb,SoftwareSerial& gS){
          sum+=sensorValue;
     }
     offset=sum/10.0;
+    pinMode(PIN_MICS_PREHEAT,OUTPUT);
+    digitalWrite(PIN_MICS_PREHEAT,OUTPUT);
+    delay(MICS_PREHEAT_SECONDS);
+    digitalWrite(PIN_MICS_PREHEAT,LOW);
     // ...
 }
+void GiveSoundCommand(const unsigned int t,const unsigned int iter){
+    for(int i = 0; i < iter; i++){
+      digitalWrite(PIN_BUZZER,HIGH);
+      delay(t * (i+1));
+      digitalWrite(PIN_BUZZER,LOW);
+      delay(t * (i+1));
+    }
+}
 
-void SetBuzzerState(bool verify){
+void SetBuzzerState(bool verify,long t){
   static bool buzzerState = false;
   static int previousValue = 0;
+  static long coolDown = 0;
+  if(coolDown > millis()){
+    return;
+  }
   if(verify){ 
+    coolDown = millis() + t;
     unsigned long currentValue = millis();
     if(currentValue - previousValue >= 1000){
         previousValue = currentValue;
@@ -112,9 +129,25 @@ bool GetPressureAndHeight(const double& p0, double& temp, double& pressure, doub
   pressure *= 100;
   return true;
 }
-
-void TurnServo(const float degree){
+bool GetMISCData(String& miscData){
+  int vnox_value = analogRead(PIN_MICS_VNOX);
+  int vred_value = analogRead(PIN_MICS_VRED);
+  if(vnox_value == -1 || vred_value == -1){
+    miscData = "";
+    return false;
+  }
+  miscData = String(map(vred_value,100,1500,1000,1)*1e-4)+","+String(map(vnox_value*100,80,2000,5,1000)*1e-6);
+  return false;
+}
+void TurnServo(const float degree,const bool doDetach){
+  if(!servo.attached()){
+    servo.attach(PIN_SERVO);
+  }
   servo.write(degree);
+  delay(500);
+  if(doDetach){
+    servo.detach();
+  }
 }
 bool GetTemperatureAndHumidity(double& temp, double& humidity){
   double t = dht.readTemperature();
@@ -140,8 +173,16 @@ bool GetSpeed(float& sp){
   sp = sqrt((2*abs(P))/1.225);
   return true;
 }
-bool GetVoltage(float&){
-  return 2* map(analogRead(PIN_VOLTAGE_DIVIDER),0,1024,0,2.5);
+bool GetVoltage(float& vOut){
+  int inputVoltage = analogRead(PIN_VOLTAGE_DIVIDER);
+  if(inputVoltage == -1){
+    vOut = 0;
+    return false;
+  }
+  else{
+    vOut = inputVoltage / 1024 * 10;
+    return true;
+  }  
 }
 void SavePhoto(){
   digitalWrite(PIN_CAMERA,HIGH);

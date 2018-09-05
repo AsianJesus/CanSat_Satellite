@@ -13,8 +13,12 @@
 #define PIN_PITOTTUBE A3
 #define PIN_CAMERA 3
 #define PIN_VOLTAGE_DIVIDER A1
+#define PIN_MICS_PREHEAT 1
+#define PIN_MICS_VNOX A0
+#define PIN_MICS_VRED A1
 #define DHT_TYPE 11
-
+#define BUZZER_COOLDOWN 60000
+#define MICS_PREHEAT_SECONDS 5
 
 enum MSG_TYPES {
 	TELEMETRY = 0xFF,
@@ -32,10 +36,13 @@ enum MSG_TYPES {
   bool GetVoltage(float&);
   bool GetGPSCoordinates(String& gpsData);	
   bool GetSpeed(float& sp);
+  bool GetMISCData(String& miscData);
+
+  void GiveSoundCommand(const unsigned int t,const unsigned int iter = 3); 
 
   void SavePhoto();
-	void TurnServo(const float degree);
-	void SetBuzzerState(const bool state);
+	void TurnServo(const float degree,const bool doDetach = true);
+	void SetBuzzerState(const bool state, long cooldown = 0);
 	// MSG_TYPE/body
 	void XBeeSend(MSG_TYPES type,const String& msg);
 	void XBeeSend(MSG_TYPES type);
