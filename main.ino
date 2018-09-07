@@ -132,16 +132,22 @@ String BuildTelemetryMessage(double t, double hum,double pres, double altit,long
   telemetry.concat(",");
   telemetry.concat(String(fTime));
   telemetry.concat(",");
+  if(t != 0)
   telemetry.concat(String(t));
   telemetry.concat(",");
+  if(pres != 0)
   telemetry.concat(String(pres));
   telemetry.concat(",");
+  if(altit != 0)
   telemetry.concat(String(altit));
   telemetry.concat(",");
+  if(hum != 0)
   telemetry.concat(String(hum));
   telemetry.concat(",");
+  if(sp != 0);
   telemetry.concat(String(sp));
   telemetry.concat(",");
+  if(volt != 0)
   telemetry.concat(String(volt));
   telemetry.concat(",");
   telemetry.concat(gps);
@@ -151,13 +157,11 @@ String BuildTelemetryMessage(double t, double hum,double pres, double altit,long
 }
 void GetInfoFromSensors(double& t, double& hum,double& pressure, double& altit,long& fTime,float& volt,float& sp,String& gpsData,String& misc){
   
-  if(!GetTemperatureAndHumidity(t,hum)){
-    t = 0;
-  }
+  bool couldRead = GetTemperatureAndHumidity(t,hum));
   GetFlightTime(fTime);
   fTime -= startTimePoint;
-  GetPressureAndHeight(p0,t,pressure,altit);
-  //GetVoltage(volt);
+  GetPressureAndHeight(p0,t,pressure,altit,!couldRead);
+  GetVoltage(volt);
   GetGPSCoordinates(gpsData);
   GetSpeed(sp); 
   GetMISCData(misc);

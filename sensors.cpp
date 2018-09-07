@@ -13,6 +13,7 @@ SoftwareSerial* xbee;
 TinyGPS gps;
 SFE_BMP180 bmp;
 RTC_DS1307 RTC;
+bool isCameraActivated = false;
 float offset = 0;
 void InitializeSensors(SoftwareSerial& xb,SoftwareSerial& gS){
   pinMode(PIN_BUZZER,OUTPUT);
@@ -42,6 +43,7 @@ void InitializeSensors(SoftwareSerial& xb,SoftwareSerial& gS){
     digitalWrite(PIN_MICS_PREHEAT,OUTPUT);
     delay(MICS_PREHEAT_SECONDS);
     digitalWrite(PIN_MICS_PREHEAT,LOW);
+    pinMode(PIN_CAMERA,OUTPUT);
     // ...
 }
 void GiveSoundCommand(const unsigned int t,const unsigned int iter){
@@ -109,10 +111,10 @@ bool GetGPSCoordinates(String& gpsData){
   gpsData = String(lat) + "," + String(lon) + "," + String(gps.satellites()) + "," + String(date) + ","+String(time);
   return true;
 }
-bool GetPressureAndHeight(const double& p0, double& temp, double& pressure, double& height){
+bool GetPressureAndHeight(const double& p0, double& temp, double& pressure, double& height, const bool findTemp){
   double t = temp;
   char status;
-  if(!t){
+  if(findTemp){
     status = bmp.startTemperature();
     if(!status) return false;
     delay(status);
@@ -133,7 +135,7 @@ bool GetMISCData(String& miscData){
   int vnox_value = analogRead(PIN_MICS_VNOX);
   int vred_value = analogRead(PIN_MICS_VRED);
   if(vnox_value == -1 || vred_value == -1){
-    miscData = "";
+    miscData = ",";
     return false;
   }
   miscData = String(map(vred_value,100,1500,1000,1)*1e-4)+","+String(map(vnox_value*100,80,2000,5,1000)*1e-6);
@@ -185,6 +187,12 @@ bool GetVoltage(float& vOut){
   }  
 }
 void SavePhoto(){
+  if(!isCameraActivated){
+    isCameraActivated = true;
+    digitalWrite(PIN_CAMERA,HIGH);
+    delay(2000);
+    digitalWrite(PIN_CAMERA,LOW);
+  }
   digitalWrite(PIN_CAMERA,HIGH);
   delay(100);
   digitalWrite(PIN_CAMERA,LOW);

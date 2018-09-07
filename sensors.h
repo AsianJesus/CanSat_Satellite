@@ -31,7 +31,7 @@ enum MSG_TYPES {
 
   //The list is not complete
 	bool GetTemperatureAndHumidity(double& temp, double& humidity);
-	bool GetPressureAndHeight(const double& p0, double& temp, double& pressure, double& height);
+	bool GetPressureAndHeight(const double& p0, double& temp, double& pressure, double& height,const bool findTemp = false);
   bool GetFlightTime(long& time);
   bool GetVoltage(float&);
   bool GetGPSCoordinates(String& gpsData);	
