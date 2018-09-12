@@ -3,19 +3,19 @@
 #ifndef __SENSORS__
 
 #define __SENSORS__
-#define PIN_SERVO 9
-#define PIN_DHT 6
-#define PIN_BUZZER 10
-#define PIN_XBEE_DOUT 5
-#define PIN_XBEE_DIN 4
-#define PIN_GPS_IN 8
-#define PIN_GPS_OUT 7
+#define PIN_SERVO 7
+#define PIN_DHT 11
+#define PIN_BUZZER 12
+#define PIN_XBEE_DOUT 4
+#define PIN_XBEE_DIN 3
+#define PIN_EMPTY 1
+#define PIN_GPS_OUT 10
 #define PIN_PITOTTUBE A3
-#define PIN_CAMERA 3
+#define PIN_CAMERA 13
 #define PIN_VOLTAGE_DIVIDER A1
-#define PIN_MICS_PREHEAT 1
-#define PIN_MICS_VNOX A0
-#define PIN_MICS_VRED A1
+#define PIN_MICS_PREHEAT 9
+#define PIN_MICS_VNOX A2
+#define PIN_MICS_VRED A0
 #define DHT_TYPE 11
 #define BUZZER_COOLDOWN 60000
 #define MICS_PREHEAT_SECONDS 5

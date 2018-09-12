@@ -3,11 +3,12 @@
 
 enum Command {
 	RELEASE = 1,
-	RESET = 2,
-	BEEP_START = 4,
-  BEEP_STOP = 8,
-  TAKE_PHOTO = 16,
-  SAVE_PRESSURE = 32
+  RELEASE_FORCE = 2,
+	RESET = 4,
+	BEEP_START = 8,
+  BEEP_STOP = 16,
+  TAKE_PHOTO = 32,
+  SAVE_PRESSURE = 64
 };
 
 class ArrayCursor;

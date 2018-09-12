@@ -15,7 +15,9 @@ long startTimePoint,flightTime;
 void TakePhoto();
 void TurnOnBuzzer();
 void TurnOffBuzzer();
-void Release();
+void ReleaseForce();
+void ReleaseNonForce();
+void Release(bool force = false);
 void GetAndSavePressure();
 void Reset();
 
@@ -28,20 +30,21 @@ void SendTelemetry(const String& message);
 void StartSendingTelemetry();
 void StopSendingTelemetry();
 
-SoftwareSerial xb(5,4);
-SoftwareSerial gS(7,8);
+SoftwareSerial xb(PIN_XBEE_DOUT,PIN_XBEE_DIN);
+SoftwareSerial gS(PIN_GPS_OUT,PIN_EMPTY);
 void setup() {
   // put your setup code here, to run once:
   Serial.begin(9600);
   InitializeSensors(xb,gS);
-  GiveSoundCommand(100,3);
-  commands.AddCommand(Command::RELEASE,Release);
+  //GiveSoundCommand(100,3);
+  commands.AddCommand(Command::RELEASE,ReleaseNonForce);
+  commands.AddCommand(Command::RELEASE_FORCE,ReleaseForce);
   commands.AddCommand(Command::RESET, Reset);
   commands.AddCommand(Command::BEEP_START,TurnOnBuzzer);
   commands.AddCommand(Command::BEEP_STOP,TurnOffBuzzer);
   commands.AddCommand(Command::TAKE_PHOTO,TakePhoto);
   commands.AddCommand(Command::SAVE_PRESSURE, GetAndSavePressure);
-  GiveSoundCommand(125,3);
+  //GiveSoundCommand(125,3);
   p0 = GetPressureFromEEPROM();
   p0 = 101000;
   id = GetIDFromEEPROM();
@@ -50,11 +53,11 @@ void setup() {
  // Serial.println(p0);
   gS.begin(9600);
   xb.begin(9600);
-  GiveSoundCommand(150,3);
+  StartSendingTelemetry();
+  //GiveSoundCommand(150,2);
 }
 int timeout = 1000;
 void loop() {
-  Release();
   //Incremental code
   if(TryGetCommand(commandCode)){
       ExecuteCommand(commands,commandCode);
@@ -62,6 +65,7 @@ void loop() {
   GetInfoFromSensors(temp,humidity,pressure,height,flightTime,voltage,speed,gpsData,miscData);
   if(unsigned short int code = CheckAutoCommands(height,released)){
       ExecuteCommand(commands,code);
+      Serial.println(code);
   }
   telemetryString = BuildTelemetryMessage(temp,humidity,pressure,height,flightTime,voltage,speed,gpsData,miscData);
   id++;
@@ -94,12 +98,21 @@ void TurnOnBuzzer(){
 void TurnOffBuzzer(){
   SetBuzzerState(false,BUZZER_COOLDOWN);  
 }
-void Release(){
+void Release(bool force){
+  if(released && !force) return;
+  released = true;
+  SaveReleasedStateInEEPROM(released);
   StopSendingTelemetry();
   TurnServo(90,false);
   delay(1000);
   TurnServo(0,true);
   StartSendingTelemetry();
+}
+void ReleaseForce(){
+  Release(true);
+}
+void ReleaseNonForce(){
+  Release(false);
 }
 void GetAndSavePressure(){
   double p,h;
@@ -157,7 +170,7 @@ String BuildTelemetryMessage(double t, double hum,double pres, double altit,long
 }
 void GetInfoFromSensors(double& t, double& hum,double& pressure, double& altit,long& fTime,float& volt,float& sp,String& gpsData,String& misc){
   
-  bool couldRead = GetTemperatureAndHumidity(t,hum));
+  bool couldRead = GetTemperatureAndHumidity(t,hum);
   GetFlightTime(fTime);
   fTime -= startTimePoint;
   GetPressureAndHeight(p0,t,pressure,altit,!couldRead);
