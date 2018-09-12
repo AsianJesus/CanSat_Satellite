@@ -44,6 +44,7 @@ void InitializeSensors(SoftwareSerial& xb,SoftwareSerial& gS){
     delay(MICS_PREHEAT_SECONDS);
     digitalWrite(PIN_MICS_PREHEAT,LOW);
     pinMode(PIN_CAMERA,OUTPUT);
+    TurnServo(0);
     // ...
 }
 void GiveSoundCommand(const unsigned int t,const unsigned int iter){

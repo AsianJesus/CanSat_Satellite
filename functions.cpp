@@ -48,9 +48,16 @@ unsigned short int CheckAutoCommands(const float& height, const bool released){
   if(height > RELEASE_HEIGHT && !released){
       flag |= Command::RELEASE;
   }
-  if(height < BUZZER_HEIGHT){
-     flag |= Command::BEEP_START; 
+  if(height > BUZZER_HEIGHT){
+    flag |= Command::BEEP_STOP;
+  }else
+  if(height <= BUZZER_HEIGHT && released){
+    flag |= Command::BEEP_START;
+  }else
+  if(!released){
+    flag |= Command::BEEP_ROUTINE;
   }
+  
 }
 
 unsigned int GetIDFromEEPROM(){

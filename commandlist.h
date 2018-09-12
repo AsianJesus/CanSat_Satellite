@@ -8,7 +8,8 @@ enum Command {
 	BEEP_START = 8,
   BEEP_STOP = 16,
   TAKE_PHOTO = 32,
-  SAVE_PRESSURE = 64
+  SAVE_PRESSURE = 64,
+  BEEP_ROUTINE = 128
 };
 
 class ArrayCursor;

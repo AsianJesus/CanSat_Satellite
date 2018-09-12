@@ -20,10 +20,11 @@ void ReleaseNonForce();
 void Release(bool force = false);
 void GetAndSavePressure();
 void Reset();
+void SetBuzzerRoutine();
+void BeepPeriodically();
 
-//Arguments are not finished
+void (*PerformRoutineOperation)() = 0;
 void GetInfoFromSensors(double& t, double& hum,double& pres, double& altit,long& fTime,float& volt,float& sp,String& gps,String& misc);
-//Arguments are not finished
 String BuildTelemetryMessage(double t, double hum,double pres, double altit,long fTime,float volt,float sp, String& gps, String& misc);
 void SendTelemetry(const String& message);
 
@@ -44,6 +45,7 @@ void setup() {
   commands.AddCommand(Command::BEEP_STOP,TurnOffBuzzer);
   commands.AddCommand(Command::TAKE_PHOTO,TakePhoto);
   commands.AddCommand(Command::SAVE_PRESSURE, GetAndSavePressure);
+  commands.AddCommand(Command::BEEP_ROUTINE, SetBuzzerRoutine);
   //GiveSoundCommand(125,3);
   p0 = GetPressureFromEEPROM();
   p0 = 101000;
@@ -68,6 +70,9 @@ void loop() {
       Serial.println(code);
   }
   telemetryString = BuildTelemetryMessage(temp,humidity,pressure,height,flightTime,voltage,speed,gpsData,miscData);
+  if(PerformRoutineOperation){
+    PerformRoutineOperation();
+  }
   id++;
   SaveIDInEEPROM(id);
   /*
@@ -94,18 +99,19 @@ void TakePhoto(){
 }
 void TurnOnBuzzer(){
   SetBuzzerState(true,BUZZER_COOLDOWN);
+  PerformRoutineOperation = 0;
 }
 void TurnOffBuzzer(){
   SetBuzzerState(false,BUZZER_COOLDOWN);  
+  PerformRoutineOperation = 0;
 }
 void Release(bool force){
   if(released && !force) return;
   released = true;
   SaveReleasedStateInEEPROM(released);
   StopSendingTelemetry();
-  TurnServo(90,false);
+  TurnServo(90);
   delay(1000);
-  TurnServo(0,true);
   StartSendingTelemetry();
 }
 void ReleaseForce(){
@@ -121,11 +127,32 @@ void GetAndSavePressure(){
   p0 = p;
   //Serial.println("p0");
 }
+void SetBuzzerRoutine(){
+  PerformRoutineOperation = &BeepPeriodically;
+}
+void BeepPeriodically(){
+  static long lastTime = 0;
+  static bool buzzerState = false;
+  if(buzzerState){
+    if(lastTime + 800 <= millis()){
+      noTone(PIN_BUZZER);
+      lastTime = millis();
+    }
+  }
+  else{
+    if(lastTime + 10000 <= millis()){
+      tone(PIN_BUZZER,200);
+      lastTime = millis();
+    }
+  }
+}
 void Reset(){
   SaveIDInEEPROM(0);
   id = 0;
+  released = false;
   GetFlightTime(startTimePoint);
   SaveTimeInEEPROM(startTimePoint);
+  SaveReleasedStateInEEPROM(released);
 }
 
 void StartSendingTelemetry(){
@@ -137,7 +164,7 @@ void StopSendingTelemetry(){
 }
 void SendTelemetry(){
   Serial.println(telemetryString);
-  //XBeeSend(MSG_TYPES::TELEMETRY,telemetryString);
+  XBeeSend(MSG_TYPES::TELEMETRY,telemetryString);
 }
 String BuildTelemetryMessage(double t, double hum,double pres, double altit,long fTime,float volt, float sp, String& gps,String& miscData){
   String telemetry;
