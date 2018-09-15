@@ -15,8 +15,9 @@ void ExecuteCommand(CommandList& commands,const unsigned short int commandCode){
 bool TryGetCommand(unsigned short int& flag){
     String command = XBeeRead();
     if(command == "") return false;
+    Serial.println(command);
     if(CheckCommand(command, flag)){
-      Serial.println("We did it");
+      Serial.println("We did it " + String(flag));
       return true;
     }
     else{
@@ -71,10 +72,11 @@ unsigned int GetIDFromEEPROM(){
 }
 float GetPressureFromEEPROM(){
   byte* buf = new byte[sizeof(float)];
-  for(short i = 0; i < sizeof(unsigned int); i++){
+  for(short i = 0; i < sizeof(float); i++){
     EEPROM.get(EEPROM_ADDRESS_P0+i,buf[i]);
+    Serial.println(buf[i]);
   }
-  return *(float*)(void*)&buf;
+  return *(float*)(void*)buf;
 }
 bool GetReleasedStateFromEEPROM(){
   bool rState = false;
@@ -84,8 +86,10 @@ bool GetReleasedStateFromEEPROM(){
 
 void SavePressureInEEPROM(const float p0){
   byte* ptr = (byte*)(void*)&p0;
-  for(short i = 0; i < sizeof(p0);i++)
+  for(short i = 0; i < sizeof(p0);i++){
+    Serial.println(*ptr);
     EEPROM.write(EEPROM_ADDRESS_P0+i,*(ptr++));
+  }
 }
 void SaveIDInEEPROM(const unsigned int id){
   byte* ptr = (byte*)(void*)&id;

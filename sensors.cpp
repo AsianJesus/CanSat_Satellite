@@ -22,7 +22,7 @@ void InitializeSensors(SoftwareSerial& xb,SoftwareSerial& gS){
   RTC.begin();
   xbee = &xb;
   xbee->begin(9600);
-  xbee->setTimeout(100);
+  xbee->setTimeout(200);
   gpsSerial = &gS;
   gpsSerial->begin(9600);
   delay(1000);
@@ -44,7 +44,7 @@ void InitializeSensors(SoftwareSerial& xb,SoftwareSerial& gS){
     delay(MICS_PREHEAT_SECONDS);
     digitalWrite(PIN_MICS_PREHEAT,LOW);
     pinMode(PIN_CAMERA,OUTPUT);
-    TurnServo(0);
+    TurnServo(0,false);
     // ...
 }
 void GiveSoundCommand(const unsigned int t,const unsigned int iter){
@@ -56,11 +56,11 @@ void GiveSoundCommand(const unsigned int t,const unsigned int iter){
     }
 }
 
-void SetBuzzerState(bool verify,long t){
+void SetBuzzerState(bool verify,long t,bool force){
   static bool buzzerState = false;
   static int previousValue = 0;
   static long coolDown = 0;
-  if(coolDown > millis()){
+  if(coolDown > millis() && !force){
     return;
   }
   if(verify){ 
@@ -179,11 +179,12 @@ bool GetSpeed(float& sp){
 bool GetVoltage(float& vOut){
   int inputVoltage = analogRead(PIN_VOLTAGE_DIVIDER);
   if(inputVoltage == -1){
+    Serial.println("Couldn't read");
     vOut = 0;
     return false;
   }
   else{
-    vOut = inputVoltage / 1024 * 10;
+    vOut = 10*inputVoltage / 1024.0f ;
     return true;
   }  
 }

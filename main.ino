@@ -11,7 +11,7 @@ unsigned short int commandCode;
 bool released = false;
 String telemetryString;
 long startTimePoint,flightTime; 
-
+  
 void TakePhoto();
 void TurnOnBuzzer();
 void TurnOffBuzzer();
@@ -48,7 +48,6 @@ void setup() {
   commands.AddCommand(Command::BEEP_ROUTINE, SetBuzzerRoutine);
   //GiveSoundCommand(125,3);
   p0 = GetPressureFromEEPROM();
-  p0 = 101000;
   id = GetIDFromEEPROM();
   released = GetReleasedStateFromEEPROM();
   startTimePoint = GetTimeFromEEPROM();
@@ -56,10 +55,19 @@ void setup() {
   gS.begin(9600);
   xb.begin(9600);
   StartSendingTelemetry();
+  SetBuzzerRoutine();
   //GiveSoundCommand(150,2);
 }
 int timeout = 1000;
 void loop() {
+
+  //testing the tlm reception
+  /*
+  if(xbee.available()>0)
+  {
+    Serial.println(xbee.readStringUntil("\n"));
+  }*/
+  
   //Incremental code
   if(TryGetCommand(commandCode)){
       ExecuteCommand(commands,commandCode);
@@ -70,6 +78,7 @@ void loop() {
       Serial.println(code);
   }
   telemetryString = BuildTelemetryMessage(temp,humidity,pressure,height,flightTime,voltage,speed,gpsData,miscData);
+  Serial.println(PerformRoutineOperation == 0);
   if(PerformRoutineOperation){
     PerformRoutineOperation();
   }
@@ -98,23 +107,25 @@ void TakePhoto(){
   SavePhoto();
 }
 void TurnOnBuzzer(){
-  SetBuzzerState(true,BUZZER_COOLDOWN);
+  SetBuzzerState(true,BUZZER_COOLDOWN,true);
   PerformRoutineOperation = 0;
 }
 void TurnOffBuzzer(){
-  SetBuzzerState(false,BUZZER_COOLDOWN);  
+  SetBuzzerState(false,BUZZER_COOLDOWN,true);  
   PerformRoutineOperation = 0;
 }
 void Release(bool force){
+  Serial.println("Release");
   if(released && !force) return;
   released = true;
   SaveReleasedStateInEEPROM(released);
   StopSendingTelemetry();
-  TurnServo(90);
+  TurnServo(90,false);
   delay(1000);
   StartSendingTelemetry();
 }
 void ReleaseForce(){
+  Serial.println("release force");
   Release(true);
 }
 void ReleaseNonForce(){
@@ -122,27 +133,31 @@ void ReleaseNonForce(){
 }
 void GetAndSavePressure(){
   double p,h;
-  GetPressureAndHeight(p0,temp,p,h);
+  bool getTemp = !GetTemperatureAndHumidity(temp,humidity);
+  GetPressureAndHeight(p0,temp,p,h,getTemp);
   SavePressureInEEPROM(p);
   p0 = p;
   //Serial.println("p0");
 }
 void SetBuzzerRoutine(){
   PerformRoutineOperation = &BeepPeriodically;
+  Serial.println("Setting routine");
 }
 void BeepPeriodically(){
   static long lastTime = 0;
   static bool buzzerState = false;
   if(buzzerState){
-    if(lastTime + 800 <= millis()){
-      noTone(PIN_BUZZER);
+    if(lastTime <= (millis()-800) ){
+      noTone(12);
       lastTime = millis();
+      buzzerState = false;
     }
   }
   else{
-    if(lastTime + 10000 <= millis()){
-      tone(PIN_BUZZER,200);
+    if(lastTime <= (millis()- 15000) ){
+      tone(12,400);
       lastTime = millis();
+      buzzerState = true;
     }
   }
 }
@@ -178,8 +193,9 @@ String BuildTelemetryMessage(double t, double hum,double pres, double altit,long
   if(pres != 0)
   telemetry.concat(String(pres));
   telemetry.concat(",");
-  if(altit != 0)
-  telemetry.concat(String(altit));
+  if(altit != 0){
+    telemetry.concat(String(altit>0 ? altit : 0.1));
+  }
   telemetry.concat(",");
   if(hum != 0)
   telemetry.concat(String(hum));
