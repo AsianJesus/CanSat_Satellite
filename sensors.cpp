@@ -44,7 +44,7 @@ void InitializeSensors(SoftwareSerial& xb,SoftwareSerial& gS){
     delay(MICS_PREHEAT_SECONDS);
     digitalWrite(PIN_MICS_PREHEAT,LOW);
     pinMode(PIN_CAMERA,OUTPUT);
-    TurnServo(0,false);
+    TurnServo(0,false,500);
     // ...
 }
 void GiveSoundCommand(const unsigned int t,const unsigned int iter){
@@ -142,12 +142,12 @@ bool GetMISCData(String& miscData){
   miscData = String(map(vred_value,100,1500,1000,1)*1e-4)+","+String(map(vnox_value*100,80,2000,5,1000)*1e-6);
   return false;
 }
-void TurnServo(const float degree,const bool doDetach){
+void TurnServo(const float degree,const bool doDetach, const int timeout){
   if(!servo.attached()){
     servo.attach(PIN_SERVO);
   }
   servo.write(degree);
-  delay(500);
+  delay(timeout);
   if(doDetach){
     servo.detach();
   }

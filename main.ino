@@ -115,13 +115,12 @@ void TurnOffBuzzer(){
   PerformRoutineOperation = 0;
 }
 void Release(bool force){
-  Serial.println("Release");
   if(released && !force) return;
+  Serial.println("Release");
   released = true;
   SaveReleasedStateInEEPROM(released);
   StopSendingTelemetry();
-  TurnServo(90,false);
-  delay(1000);
+  TurnServo(90, true, 1000);
   StartSendingTelemetry();
 }
 void ReleaseForce(){
