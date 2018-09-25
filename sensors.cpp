@@ -112,6 +112,18 @@ bool GetGPSCoordinates(String& gpsData){
   gpsData = String(lat) + "," + String(lon) + "," + String(gps.satellites()) + "," + String(date) + ","+String(time);
   return true;
 }
+void CorrectPressure(double& pressure){
+  static double prevValue = 0;
+  static double p = 1;
+  const double r = 64, q =0.5;
+  if(prevValue){
+    double _p = p + q;
+    double k = _p / (_p + r);
+    pressure = (prevValue + k*(pressure - prevValue));
+    p = _p * (1-k);
+  }
+  prevValue = pressure;
+}
 bool GetPressureAndHeight(const double& p0, double& temp, double& pressure, double& height, const bool findTemp){
   double t = temp;
   char status;
@@ -128,6 +140,7 @@ bool GetPressureAndHeight(const double& p0, double& temp, double& pressure, doub
   delay(status);
   status = bmp.getPressure(pressure,t);
   if(!status) return false;
+  CorrectPressure(pressure);
   height = bmp.altitude(pressure,p0/100);
   pressure *= 100;
   return true;
@@ -142,9 +155,9 @@ bool GetMISCData(String& miscData){
   miscData = String(map(vred_value,100,1500,1000,1)*1e-4)+","+String(map(vnox_value*100,80,2000,5,1000)*1e-6);
   return false;
 }
-void TurnServo(const float degree,const bool doDetach, const int timeout){
+void TurnServo(const int servoNum, const float degree,const bool doDetach, const int timeout){
   if(!servo.attached()){
-    servo.attach(PIN_SERVO);
+    servo.attach(servoNum);
   }
   servo.write(degree);
   delay(timeout);

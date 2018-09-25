@@ -3,7 +3,8 @@
 #ifndef __SENSORS__
 
 #define __SENSORS__
-#define PIN_SERVO 7
+#define PIN_SERVO_CORRECT 7
+#define PIN_SERVO_REVERSED 6
 #define PIN_DHT 11
 #define PIN_BUZZER 12
 #define PIN_XBEE_DOUT 4
@@ -41,7 +42,7 @@ enum MSG_TYPES {
   void GiveSoundCommand(const unsigned int t,const unsigned int iter = 3); 
 
   void SavePhoto();
-	void TurnServo(const float degree,const bool doDetach = true);
+	void TurnServo(const int servoPin,const float degree,const bool doDetach = true, const int timeout = 250);
 	void SetBuzzerState(const bool state, long cooldown = 0,bool force = false);
 	// MSG_TYPE/body
 	void XBeeSend(MSG_TYPES type,const String& msg);

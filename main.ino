@@ -11,13 +11,14 @@ unsigned short int commandCode;
 bool released = false;
 String telemetryString;
 long startTimePoint,flightTime; 
-  
+
+void ResetMechanism();  
 void TakePhoto();
 void TurnOnBuzzer();
 void TurnOffBuzzer();
 void ReleaseForce();
 void ReleaseNonForce();
-void Release(bool force = false);
+void ChangeMechanismState(bool force = false, bool toOpen = true);
 void GetAndSavePressure();
 void Reset();
 void SetBuzzerRoutine();
@@ -46,6 +47,7 @@ void setup() {
   commands.AddCommand(Command::TAKE_PHOTO,TakePhoto);
   commands.AddCommand(Command::SAVE_PRESSURE, GetAndSavePressure);
   commands.AddCommand(Command::BEEP_ROUTINE, SetBuzzerRoutine);
+  commands.AddCommand(Command::RESET_MECHANISM,ResetMechanism);
   //GiveSoundCommand(125,3);
   p0 = GetPressureFromEEPROM();
   id = GetIDFromEEPROM();
@@ -114,21 +116,25 @@ void TurnOffBuzzer(){
   SetBuzzerState(false,BUZZER_COOLDOWN,true);  
   PerformRoutineOperation = 0;
 }
-void Release(bool force){
+void ChangeMechanismState(bool force, bool toOpen = true){
   if(released && !force) return;
   Serial.println("Release");
-  released = true;
+  released = (toOpen || force) ? true : false;
   SaveReleasedStateInEEPROM(released);
   StopSendingTelemetry();
-  TurnServo(90, true, 1000);
+  TurnServo(PIN_SERVO_CORRECT,(toOpen ? 90 : 0), true, 500);
+  TurnServo(PIN_SERVO_REVERSED,(toOpen ? 0 : 90), true, 500);
   StartSendingTelemetry();
 }
 void ReleaseForce(){
   Serial.println("release force");
-  Release(true);
+  ChangeMechanismState(true);
 }
 void ReleaseNonForce(){
-  Release(false);
+  ChangeMechanismState(false);
+}
+void ResetMechanism(){
+  ChangeMechanismState(true, false);
 }
 void GetAndSavePressure(){
   double p,h;
@@ -162,11 +168,12 @@ void BeepPeriodically(){
 }
 void Reset(){
   SaveIDInEEPROM(0);
-  id = 0;
-  released = false;
   GetFlightTime(startTimePoint);
   SaveTimeInEEPROM(startTimePoint);
   SaveReleasedStateInEEPROM(released);
+  ChangeMechanismState(true, false);
+  id = 0;
+  released = false;
 }
 
 void StartSendingTelemetry(){
