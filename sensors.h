@@ -42,12 +42,13 @@ enum MSG_TYPES {
   void GiveSoundCommand(const unsigned int t,const unsigned int iter = 3); 
 
   void SavePhoto();
-	void TurnServo(const int servoPin,const float degree,const bool doDetach = true, const int timeout = 250);
+	void TurnServo(const float degree,const bool doDetach = false, const int timeout = 250);
 	void SetBuzzerState(const bool state, long cooldown = 0,bool force = false);
 	// MSG_TYPE/body
 	void XBeeSend(MSG_TYPES type,const String& msg);
 	void XBeeSend(MSG_TYPES type);
-
+  void AttachServos();
+  void DetachServos();
 	String XBeeRead();
 #endif
 

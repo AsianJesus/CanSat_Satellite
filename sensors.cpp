@@ -6,7 +6,7 @@
 #include <SoftwareSerial.h>
 #include <TinyGPS.h>
 #include <Wire.h>
-Servo servo;
+Servo servoCor,servoRev;
 DHT dht(PIN_DHT,DHT_TYPE);
 SoftwareSerial* gpsSerial;
 SoftwareSerial* xbee;
@@ -155,14 +155,15 @@ bool GetMISCData(String& miscData){
   miscData = String(map(vred_value,100,1500,1000,1)*1e-4)+","+String(map(vnox_value*100,80,2000,5,1000)*1e-6);
   return false;
 }
-void TurnServo(const int servoNum, const float degree,const bool doDetach, const int timeout){
-  if(!servo.attached()){
-    servo.attach(servoNum);
+void TurnServo(const float degree,const bool doDetach, const int timeout){
+  if( !(servoCor.attached() && servoRev.attached())){
+    AttachServos();
   }
-  servo.write(degree);
-  delay(timeout);
+  servoCor.write(degree);
+  servoRev.write(90-degree);
   if(doDetach){
-    servo.detach();
+    delay(timeout);
+    DetachServos();
   }
 }
 bool GetTemperatureAndHumidity(double& temp, double& humidity){
@@ -218,4 +219,12 @@ bool GetFlightTime(long& time) {
   time = DT.hour()*3600 + DT.minute()*60 + DT.second();
   return true;
   }
+void AttachServos(){
+  servoCor.attach(PIN_SERVO_CORRECT);
+  servoRev.attach(PIN_SERVO_REVERSED);
+}
+void DetachServos(){
+  servoCor.detach();
+  servoRev.detach();
+}
 

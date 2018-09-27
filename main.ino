@@ -56,8 +56,10 @@ void setup() {
  // Serial.println(p0);
   gS.begin(9600);
   xb.begin(9600);
-  StartSendingTelemetry();
   SetBuzzerRoutine();
+  if(released){
+    StartSendingTelemetry();
+  }
   //GiveSoundCommand(150,2);
 }
 int timeout = 1000;
@@ -83,6 +85,9 @@ void loop() {
   Serial.println(PerformRoutineOperation == 0);
   if(PerformRoutineOperation){
     PerformRoutineOperation();
+  }
+  if(!released){
+    SendTelemetry();
   }
   id++;
   SaveIDInEEPROM(id);
@@ -121,10 +126,11 @@ void ChangeMechanismState(bool force, bool toOpen = true){
   Serial.println("Release");
   released = (toOpen || force) ? true : false;
   SaveReleasedStateInEEPROM(released);
-  StopSendingTelemetry();
-  TurnServo(PIN_SERVO_CORRECT,(toOpen ? 90 : 0), true, 500);
-  TurnServo(PIN_SERVO_REVERSED,(toOpen ? 0 : 90), true, 500);
-  StartSendingTelemetry();
+  TurnServo((toOpen ? 90 : 0), toOpen, 500);
+  TurnServo((toOpen ? 0 : 90), toOpen, 500);
+  if(toOpen){
+    StartSendingTelemetry();
+  }
 }
 void ReleaseForce(){
   Serial.println("release force");
