@@ -50,6 +50,7 @@ void CommandList::ExecuteCommands(unsigned short int flag){
    if(Command::SAVE_PRESSURE & flag) ((Action<void>)list[Command::SAVE_PRESSURE])();
    if(Command::RELEASE_FORCE & flag) ((Action<void>)list[Command::RELEASE_FORCE])();
    if(Command::BEEP_ROUTINE & flag) ((Action<void>)list[Command::BEEP_ROUTINE])();
+   if(Command::RESET_MECHANISM & flag) ((Action<void>)list[Command::RESET_MECHANISM])();
 }
 
 Command GetCommandByID(short int id){
@@ -61,6 +62,7 @@ Command GetCommandByID(short int id){
    if(Command::SAVE_PRESSURE & id) return Command::SAVE_PRESSURE;
    if(Command::RELEASE_FORCE & id) return Command::RELEASE_FORCE;
    if(Command::BEEP_ROUTINE & id) return Command::BEEP_ROUTINE;
+   
 }
 
 

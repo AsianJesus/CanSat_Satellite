@@ -44,7 +44,7 @@ void InitializeSensors(SoftwareSerial& xb,SoftwareSerial& gS){
     delay(MICS_PREHEAT_SECONDS);
     digitalWrite(PIN_MICS_PREHEAT,LOW);
     pinMode(PIN_CAMERA,OUTPUT);
-    TurnServo(0,false,500);
+    //TurnServo(0,false,500);
     // ...
 }
 void GiveSoundCommand(const unsigned int t,const unsigned int iter){
@@ -104,12 +104,12 @@ bool GetGPSCoordinates(String& gpsData){
     gpsData = ",,,,";
     return false;
   }
-  float lat, lon;
+  long lat, lon;
   unsigned long age;
-  gps.f_get_position(&lat, &lon, &age);
+  gps.get_position(&lat, &lon, &age);
   unsigned long date, time;
   gps.get_datetime(&date,&time,&age);
-  gpsData = String(lat) + "," + String(lon) + "," + String(gps.satellites()) + "," + String(date) + ","+String(time);
+  gpsData = String(lat/0.0001) + "," + String(lon/0.0001) + "," + String(gps.satellites()) + "," + String(date) + ","+String(time);
   return true;
 }
 void CorrectPressure(double& pressure){
@@ -156,13 +156,14 @@ bool GetMISCData(String& miscData){
   return false;
 }
 void TurnServo(const float degree,const bool doDetach, const int timeout){
-  if( !(servoCor.attached() && servoRev.attached())){
+  //if( !(servoCor.attached() && servoRev.attached())){
     AttachServos();
-  }
+ //}
+ Serial.println("Turning servos");
   servoCor.write(degree);
   servoRev.write(90-degree);
+  delay(timeout);
   if(doDetach){
-    delay(timeout);
     DetachServos();
   }
 }
@@ -203,10 +204,12 @@ bool GetVoltage(float& vOut){
   }  
 }
 void SavePhoto(){
+  Serial.println("Taking photo");
   if(!isCameraActivated){
+    Serial.println("Turning on camera");
     isCameraActivated = true;
     digitalWrite(PIN_CAMERA,HIGH);
-    delay(2000);
+    delay(1000);
     digitalWrite(PIN_CAMERA,LOW);
   }
   digitalWrite(PIN_CAMERA,HIGH);

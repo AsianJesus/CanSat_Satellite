@@ -23,6 +23,7 @@ void GetAndSavePressure();
 void Reset();
 void SetBuzzerRoutine();
 void BeepPeriodically();
+void HoldServos();
 
 void (*PerformRoutineOperation)() = 0;
 void GetInfoFromSensors(double& t, double& hum,double& pres, double& altit,long& fTime,float& volt,float& sp,String& gps,String& misc);
@@ -31,6 +32,7 @@ void SendTelemetry(const String& message);
 
 void StartSendingTelemetry();
 void StopSendingTelemetry();
+
 
 SoftwareSerial xb(PIN_XBEE_DOUT,PIN_XBEE_DIN);
 SoftwareSerial gS(PIN_GPS_OUT,PIN_EMPTY);
@@ -56,9 +58,15 @@ void setup() {
  // Serial.println(p0);
   gS.begin(9600);
   xb.begin(9600);
-  SetBuzzerRoutine();
+  //SetBuzzerRoutine();
+  
   if(released){
+    ReleaseForce();
     StartSendingTelemetry();
+  }
+  else{
+    Serial.println("Reseting mechanism");
+    ResetMechanism();
   }
   //GiveSoundCommand(150,2);
 }
@@ -82,11 +90,12 @@ void loop() {
       Serial.println(code);
   }
   telemetryString = BuildTelemetryMessage(temp,humidity,pressure,height,flightTime,voltage,speed,gpsData,miscData);
-  Serial.println(PerformRoutineOperation == 0);
   if(PerformRoutineOperation){
     PerformRoutineOperation();
   }
+  Serial.println(released); 
   if(!released){
+    HoldServos();
     SendTelemetry();
   }
   id++;
@@ -121,13 +130,20 @@ void TurnOffBuzzer(){
   SetBuzzerState(false,BUZZER_COOLDOWN,true);  
   PerformRoutineOperation = 0;
 }
+void HoldServos(){
+  Serial.println("Holding servos");
+  TurnServo(0,true,250);
+}
 void ChangeMechanismState(bool force, bool toOpen = true){
-  if(released && !force) return;
-  Serial.println("Release");
-  released = (toOpen || force) ? true : false;
+  if(released && !force)
+  {
+    Serial.println("Returning witout any change");
+    return;
+  }
+  StopSendingTelemetry();
+  released = toOpen;
   SaveReleasedStateInEEPROM(released);
-  TurnServo((toOpen ? 90 : 0), toOpen, 500);
-  TurnServo((toOpen ? 0 : 90), toOpen, 500);
+  TurnServo((toOpen ? 90 : 5), true/*toOpen*/, 500);
   if(toOpen){
     StartSendingTelemetry();
   }
@@ -140,6 +156,7 @@ void ReleaseNonForce(){
   ChangeMechanismState(false);
 }
 void ResetMechanism(){
+  Serial.println("reseting mechanism");
   ChangeMechanismState(true, false);
 }
 void GetAndSavePressure(){
@@ -183,6 +200,7 @@ void Reset(){
 }
 
 void StartSendingTelemetry(){
+  Timer1.detachInterrupt();
   Timer1.initialize(1000000);
   Timer1.attachInterrupt(SendTelemetry);
 }
