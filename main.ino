@@ -40,7 +40,7 @@ void setup() {
   // put your setup code here, to run once:
   Serial.begin(9600);
   InitializeSensors(xb,gS);
-  //GiveSoundCommand(100,3);
+  GiveSoundCommand(100,3);
   commands.AddCommand(Command::RELEASE,ReleaseNonForce);
   commands.AddCommand(Command::RELEASE_FORCE,ReleaseForce);
   commands.AddCommand(Command::RESET, Reset);
@@ -50,7 +50,7 @@ void setup() {
   commands.AddCommand(Command::SAVE_PRESSURE, GetAndSavePressure);
   commands.AddCommand(Command::BEEP_ROUTINE, SetBuzzerRoutine);
   commands.AddCommand(Command::RESET_MECHANISM,ResetMechanism);
-  //GiveSoundCommand(125,3);
+  GiveSoundCommand(125,3);
   p0 = GetPressureFromEEPROM();
   id = GetIDFromEEPROM();
   released = GetReleasedStateFromEEPROM();
@@ -58,7 +58,7 @@ void setup() {
  // Serial.println(p0);
   gS.begin(9600);
   xb.begin(9600);
-  //SetBuzzerRoutine();
+  SetBuzzerRoutine();
   
   if(released){
     ReleaseForce();
@@ -68,7 +68,7 @@ void setup() {
     Serial.println("Reseting mechanism");
     ResetMechanism();
   }
-  //GiveSoundCommand(150,2);
+  GiveSoundCommand(150,2);
 }
 int timeout = 1000;
 void loop() {
@@ -182,7 +182,7 @@ void BeepPeriodically(){
     }
   }
   else{
-    if(lastTime <= (millis()- 15000) ){
+    if(lastTime <= (millis()- 20000) ){
       tone(12,400);
       lastTime = millis();
       buzzerState = true;
@@ -213,6 +213,7 @@ void SendTelemetry(){
 }
 String BuildTelemetryMessage(double t, double hum,double pres, double altit,long fTime,float volt, float sp, String& gps,String& miscData){
   String telemetry;
+  //telemetry.concat("1026,");
   telemetry.concat(String(id));
   telemetry.concat(",");
   telemetry.concat(String(fTime));
